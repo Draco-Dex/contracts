@@ -89,10 +89,10 @@ contract GridQueryHelper {
             (, , makerAmountRemaining) = boundariesFunc(boundaryLower);
             result[i] = MakerBook(boundaryLower, makerAmountRemaining);
 
-            if (lte) {
-                boundary -= resolution;
+             if (lte) {
+                boundary =boundaryLower - resolution;
             } else {
-                boundary += resolution;
+                boundary =boundaryLower + resolution;
             }
             priceX96 = BoundaryMath.getPriceX96AtBoundary(boundary);
         }
