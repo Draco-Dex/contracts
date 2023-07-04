@@ -70,7 +70,7 @@ contract UltraDraco is ERC4626 {
                 allowance[owner_][msg.sender] = allowed - shares;
         }
 
-        beforeWithdraw(assetsMinusFee, shares);
+        //beforeWithdraw(assetsMinusFee, shares);
 
         _burn(owner_, shares);
 
