@@ -134,10 +134,13 @@ contract MakerOrderManager is
         uint128 totalMakerAmountOut ;
         
         for (uint256 i = 0; i < orderIds.length; i++) {
-            (uint64 bundleId,,uint128 amount) = IGrid(grid).orders(orderIds[i]);
+            (uint64 bundleId,address owner,uint128 amount) = IGrid(grid).orders(orderIds[i]);
 
            ( ,bool zero,,,,)  = IGrid(grid).bundles(bundleId);
-              
+
+             // G_COO: caller is not the order owner
+             require(owner == _msgSender(), "G_COO");
+
             ( uint128 amount0,uint128 amount1 ) = IGrid(grid).settleMakerOrderAndCollect(recipient,orderIds[i],unwrapWETH9);
 
             if(zero && IGrid(grid).token0() == draco ){

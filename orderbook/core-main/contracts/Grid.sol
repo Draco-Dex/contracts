@@ -524,8 +524,6 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
         uint256 orderId
     ) private returns (bool zero, uint128 makerAmountOut, uint128 takerAmountOut, uint128 takerFeeAmountOut) {
         Order memory order = orders[orderId];
-        // G_COO: caller is not the order owner
-        require(order.owner == _msgSender(), "G_COO");
 
         // deletes order from storage
         delete orders[orderId];
