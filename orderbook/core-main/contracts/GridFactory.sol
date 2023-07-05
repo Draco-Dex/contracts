@@ -11,10 +11,11 @@ import "./PriceOracle.sol";
 contract GridFactory is IGridFactory, Context, GridDeployer, Ownable {
     address public immutable override priceOracle;
     address public immutable weth9;
+    address public immutable createGridController;
     mapping(int24 => int24) public override resolutions;
     /// @notice The first key and the second key are token addresses, and the third key is the resolution,
     /// and the value is the grid address
-    /// @dev For tokenA/tokenB and the specified resolution, both the combination of tokenA/tokenB
+    /// @dev For tokenA/tokenB and the specified resolution, both the combination of tokenA/t@gridexprotocol/coreokenB
     /// and the combination of tokenB/tokenA with resolution will be stored in the mapping
     mapping(address => mapping(address => mapping(int24 => address))) public override grids;
 
@@ -24,7 +25,7 @@ contract GridFactory is IGridFactory, Context, GridDeployer, Ownable {
 
         priceOracle = address(new PriceOracle());
         weth9 = _weth9;
-
+        createGridController = msg.sender;
         _enableResolutions();
 
         _setGridPrefixCreationCode(_gridPrefixCreationCode);
@@ -48,10 +49,10 @@ contract GridFactory is IGridFactory, Context, GridDeployer, Ownable {
     }
 
     /// @inheritdoc IGridFactory
-    function createGrid(address tokenA, address tokenB, int24 resolution) external override returns (address grid) {
+    function createGrid(address tokenA, address tokenB, int24 resolution, address makerOrderAddress,address swapAddress, address quoterAddress) external override returns (address grid) {
         // GF_NI: not initialized
         require(owner() == address(0), "GF_NI");
-
+        require(createGridController == msg.sender,"GC_NC");
         // GF_NC: not contract
         require(Address.isContract(tokenA), "GF_NC");
         require(Address.isContract(tokenB), "GF_NC");
@@ -66,7 +67,7 @@ contract GridFactory is IGridFactory, Context, GridDeployer, Ownable {
         require(takerFee > 0, "GF_RNE");
 
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        grid = deploy(token0, token1, resolution, takerFee, priceOracle, weth9);
+        grid = deploy(token0, token1, resolution, takerFee, priceOracle, weth9,makerOrderAddress,swapAddress,quoterAddress);
         grids[tokenA][tokenB][resolution] = grid;
         grids[tokenB][tokenA][resolution] = grid;
         emit GridCreated(token0, token1, resolution, grid);

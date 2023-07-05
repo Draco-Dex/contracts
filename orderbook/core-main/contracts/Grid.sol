@@ -39,6 +39,10 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
 
     int24 public immutable takerFee;
 
+    address private immutable makerOrderAddress;
+    address private immutable swapAddress;
+    address private immutable quoterAddress;
+    
     Slot0 public override slot0;
 
     mapping(int24 => Boundary) public override boundaries0;
@@ -58,7 +62,7 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
     receive() external payable {}
 
     constructor() {
-        (token0, token1, resolution, takerFee, priceOracle, weth9) = IGridDeployer(_msgSender()).parameters();
+        (token0, token1, resolution, takerFee, priceOracle, weth9,makerOrderAddress,swapAddress,quoterAddress) = IGridDeployer(_msgSender()).parameters();
     }
 
     modifier lock() {
@@ -119,21 +123,12 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
         PlaceOrderParameters memory parameters,
         bytes calldata data
     ) external override lock returns (uint256 orderId) {
+        require(_msgSender() == makerOrderAddress , "G_MK");
         orderId = _nextOrderId();
 
         _processPlaceOrder(orderId, parameters.recipient, parameters.zero, parameters.boundaryLower, parameters.amount);
 
         _processPlaceOrderReceiveAndCallback(parameters.zero, parameters.amount, data);
-    }
-
-    /// @inheritdoc IGrid
-    function placeMakerOrderInBatch(
-        PlaceOrderInBatchParameters memory parameters,
-        bytes calldata data
-    ) external override lock returns (uint256[] memory orderIds) {
-        uint256 amountTotal;
-        (orderIds, amountTotal) = _placeMakerOrderInBatch(parameters.recipient, parameters.zero, parameters.orders);
-        _processPlaceOrderReceiveAndCallback(parameters.zero, amountTotal, data);
     }
 
     function _placeMakerOrderInBatch(
@@ -249,6 +244,7 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
         uint160 priceLimitX96,
         bytes calldata data
     ) external override returns (int256 amount0, int256 amount1) {
+        require((_msgSender() == swapAddress || _msgSender() == quoterAddress), "G_SP");
         // G_ASZ: amount specified cannot be zero
         require(amountSpecified != 0, "G_ASZ");
 
@@ -467,6 +463,7 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
 
     /// @inheritdoc IGrid
     function settleMakerOrder(uint256 orderId) external override lock returns (uint128 amount0, uint128 amount1) {
+         require(_msgSender() == makerOrderAddress , "G_MK");
         (amount0, amount1) = _settleMakerOrder(orderId);
 
         TokensOwed storage tokensOwed = tokensOweds[_msgSender()];
@@ -489,6 +486,7 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
         uint256 orderId,
         bool unwrapWETH9
     ) external override lock returns (uint128 amount0, uint128 amount1) {
+        require(_msgSender() == makerOrderAddress , "G_MK");
         (amount0, amount1) = _settleMakerOrder(orderId);
 
         _collect(recipient, amount0, amount1, unwrapWETH9);
@@ -500,6 +498,7 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
         uint256[] memory orderIds,
         bool unwrapWETH9
     ) external override lock returns (uint128 amount0Total, uint128 amount1Total) {
+        require(_msgSender() == makerOrderAddress , "G_MK");
         (amount0Total, amount1Total) = _settleMakerOrderInBatch(orderIds);
 
         _collect(recipient, amount0Total, amount1Total, unwrapWETH9);
@@ -582,41 +581,12 @@ contract Grid is IGrid, IGridStructs, IGridEvents, IGridParameters, Context {
     }
 
     /// @inheritdoc IGrid
-    function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override lock {
-        uint256 balance0Before;
-        uint256 balance1Before;
-
-        if (amount0 > 0) {
-            balance0Before = _balance0();
-            SafeERC20.safeTransfer(IERC20(token0), recipient, amount0);
-        }
-        if (amount1 > 0) {
-            balance1Before = _balance1();
-            SafeERC20.safeTransfer(IERC20(token1), recipient, amount1);
-        }
-
-        IGridFlashCallback(_msgSender()).gridexFlashCallback(data);
-
-        uint128 paid0;
-        uint128 paid1;
-        if (amount0 > 0) {
-            uint256 balance0After = _balance0();
-            paid0 = (balance0After - balance0Before).toUint128();
-        }
-        if (amount1 > 0) {
-            uint256 balance1After = _balance1();
-            paid1 = (balance1After - balance1Before).toUint128();
-        }
-
-        emit Flash(_msgSender(), recipient, amount0, amount1, paid0, paid1);
-    }
-
-    /// @inheritdoc IGrid
     function collect(
         address recipient,
         uint128 amount0Requested,
         uint128 amount1Requested
     ) external override lock returns (uint128 amount0, uint128 amount1) {
+        require(_msgSender() == makerOrderAddress , "G_MK");
         (amount0, amount1) = _collectOwed(tokensOweds[_msgSender()], recipient, amount0Requested, amount1Requested);
 
         emit Collect(_msgSender(), recipient, amount0, amount1);

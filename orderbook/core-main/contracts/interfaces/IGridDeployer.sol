@@ -13,6 +13,9 @@ interface IGridDeployer {
         int24 takerFee;
         address priceOracle;
         address weth9;
+        address makerOrderAddress;
+        address swapAddress;
+        address quoterAddress;
     }
 
     /// @notice Returns the grid creation code
@@ -35,6 +38,9 @@ interface IGridDeployer {
             int24 resolution,
             int24 takerFee,
             address priceOracle,
-            address weth9
+            address weth9,
+            address makerOrderAddress,
+            address swapAddress,
+            address quoterAddress
         );
 }

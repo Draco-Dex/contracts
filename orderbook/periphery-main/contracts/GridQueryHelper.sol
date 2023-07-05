@@ -89,7 +89,7 @@ contract GridQueryHelper {
             (, , makerAmountRemaining) = boundariesFunc(boundaryLower);
             result[i] = MakerBook(boundaryLower, makerAmountRemaining);
 
-             if (lte) {
+            if (lte) {
                 boundary =boundaryLower - resolution;
             } else {
                 boundary =boundaryLower + resolution;

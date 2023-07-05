@@ -5,13 +5,14 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@gridexprotocol/core/contracts/interfaces/IGrid.sol";
 import "@gridexprotocol/core/contracts/interfaces/callback/IGridSwapCallback.sol";
-import "@gridexprotocol/core/contracts/libraries/GridAddress.sol";
-import "@gridexprotocol/core/contracts/libraries/CallbackValidator.sol";
+import "./libraries/GridAddress.sol";
+import "./libraries/CallbackValidator.sol";
 import "@gridexprotocol/core/contracts/libraries/BoundaryMath.sol";
 import "./interfaces/ISwapRouter.sol";
 import "./libraries/SwapPath.sol";
 import "./AbstractPayments.sol";
 import "./Multicall.sol";
+import {Draco} from "./Draco.sol";
 
 /// @title Gridex Swap Router
 /// @notice A stateless execution router adapted for the gridex protocol
@@ -23,11 +24,15 @@ abstract contract SwapRouter is IGridSwapCallback, ISwapRouter, AbstractPayments
     /// an exact output swap), will never reach this value
     uint256 private constant DEFAULT_AMOUNT_IN_CACHED = type(uint256).max;
 
+         // @dev The address of token
+    address public immutable draco;
+
     /// @dev Transient storage variable used for returning the computed amount in for an exact output swap.
     uint256 private amountInCached;
 
-    constructor() {
+    constructor(address _draco) {
         amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+        draco = _draco;
     }
 
     /// @dev Returns the grid for the given token pair and resolution. The grid contract may or may not exist.
@@ -79,10 +84,19 @@ abstract contract SwapRouter is IGridSwapCallback, ISwapRouter, AbstractPayments
 
         (IGrid grid, bool zeroForOne) = _decodeGridForExactInput(data);
 
+       // sell tax 
+        bool hasTax = (zeroForOne && grid.token0() == draco) || (!zeroForOne && grid.token1() == draco) ;
+        uint256 totalTax ;
+        if(hasTax){
+            // charge tax to le grid for temp ,when order not filled ,tax will back
+           totalTax =  Draco(draco).chargeTax(_msgSender(),amountIn);
+        }
+        uint256 _amountIn = amountIn - totalTax;
+
         (int256 amount0, int256 amount1) = grid.swap(
             recipient,
             zeroForOne,
-            amountIn.toInt256(),
+            _amountIn.toInt256()  ,
             priceLimitX96 == 0 ? (zeroForOne ? BoundaryMath.MIN_RATIO : BoundaryMath.MAX_RATIO) : priceLimitX96,
             abi.encode(data)
         );

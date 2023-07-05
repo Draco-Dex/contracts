@@ -136,16 +136,6 @@ interface IGrid {
         bytes calldata data
     ) external returns (uint256 orderId);
 
-    /// @notice Places maker orders on the grid
-    /// @dev The caller of this method receives a callback in the form of
-    /// IGridPlaceMakerOrderCallback#gridexPlaceMakerOrderCallback
-    /// @param parameters The parameters used to place the maker orders
-    /// @param data Any data to be passed through to the callback
-    /// @return orderIds The unique identifiers of the orders
-    function placeMakerOrderInBatch(
-        IGridParameters.PlaceOrderInBatchParameters memory parameters,
-        bytes calldata data
-    ) external returns (uint256[] memory orderIds);
 
     /// @notice Settles a maker order
     /// @param orderId The unique identifier of the order
@@ -176,15 +166,6 @@ interface IGrid {
         uint256[] memory orderIds,
         bool unwrapWETH9
     ) external returns (uint128 amount0Total, uint128 amount1Total);
-
-    /// @notice For flash swaps. The caller borrows assets and returns them in the callback of the function,
-    /// in addition to a fee
-    /// @dev The caller of this function receives a callback in the form of IGridFlashCallback#gridexFlashCallback
-    /// @param recipient The address which will receive the token0 and token1
-    /// @param amount0 The amount of token0 to receive
-    /// @param amount1 The amount of token1 to receive
-    /// @param data Any data to be passed through to the callback
-    function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external;
 
     /// @notice Collects tokens owed
     /// @param recipient The address to receive the collected fees

@@ -35,9 +35,12 @@ contract GridDeployer is IGridDeployer {
         int24 resolution,
         int24 takerFee,
         address priceOracle,
-        address weth9
+        address weth9,
+        address makerOrderAddress,
+        address swapAddress,
+        address quoterAddress
     ) internal returns (address grid) {
-        parameters = Parameters(token0, token1, resolution, takerFee, priceOracle, weth9);
+        parameters = Parameters(token0, token1, resolution, takerFee, priceOracle, weth9,makerOrderAddress,swapAddress,quoterAddress);
         grid = Create2.deploy(0, keccak256(abi.encode(token0, token1, resolution)), gridCreationCode);
         delete parameters;
     }

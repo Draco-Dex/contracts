@@ -53,15 +53,15 @@ contract FlashTest is IGridFlashCallback, AbstractPayFacade, Context {
         }
     }
 
-    function flash(FlashCalldata calldata data) external payable {
-        GridAddress.GridKey memory gridKey = GridAddress.gridKey(data.tokenA, data.tokenB, data.resolution);
-        uint256 gasBefore = gasleft();
-        IGrid(GridAddress.computeAddress(gridFactory, gridKey)).flash(
-            data.recipient,
-            data.amount0,
-            data.amount1,
-            abi.encode(data)
-        );
-        gasUsed = gasBefore - gasleft();
-    }
+    // function flash(FlashCalldata calldata data) external payable {
+    //     GridAddress.GridKey memory gridKey = GridAddress.gridKey(data.tokenA, data.tokenB, data.resolution);
+    //     uint256 gasBefore = gasleft();
+    //     IGrid(GridAddress.computeAddress(gridFactory, gridKey)).flash(
+    //         data.recipient,
+    //         data.amount0,
+    //         data.amount1,
+    //         abi.encode(data)
+    //     );
+    //     gasUsed = gasBefore - gasleft();
+    // }
 }

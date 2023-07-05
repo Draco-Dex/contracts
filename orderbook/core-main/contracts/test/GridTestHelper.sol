@@ -110,29 +110,6 @@ contract GridTestHelper is IGridPlaceMakerOrderCallback, IGridSwapCallback, Abst
         IGridParameters.BoundaryLowerWithAmountParameters[] orders;
     }
 
-    function placeMakerOrderInBatch(PlaceOrderInBatchParameters calldata parameters) external payable {
-        uint256 gasBefore = gasleft();
-
-        GridAddress.GridKey memory gridKey = GridAddress.gridKey(
-            parameters.tokenA,
-            parameters.tokenB,
-            parameters.resolution
-        );
-
-        IGrid grid = IGrid(GridAddress.computeAddress(gridFactory, gridKey));
-        address recipient = parameters.recipient == address(0) ? _msgSender() : parameters.recipient;
-        grid.placeMakerOrderInBatch(
-            IGridParameters.PlaceOrderInBatchParameters({
-                recipient: recipient,
-                zero: parameters.zero,
-                orders: parameters.orders
-            }),
-            abi.encode(PlaceMakerOrderCalldata(gridKey, _msgSender()))
-        );
-
-        gasUsed = gasBefore - gasleft();
-    }
-
     struct SwapCalldata {
         GridAddress.GridKey gridKey;
         address payer;

@@ -26,11 +26,13 @@ contract SwapRouterHub is
         address _gridexGridFactory,
         address _uniswapV3PoolFactory,
         address _uniswapV2PoolFactory,
-        address _weth9
+        address _weth9,
+        address _draco
     )
         AbstractPayments(_gridexGridFactory, _weth9)
         UniswapV3Router(_uniswapV3PoolFactory)
         UniswapV2Router(_uniswapV2PoolFactory)
+        SwapRouter(_draco)
     {}
 
     /// @inheritdoc ISwapRouterHub

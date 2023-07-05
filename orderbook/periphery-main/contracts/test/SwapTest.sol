@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@gridexprotocol/core/contracts/interfaces/IGrid.sol";
 import "@gridexprotocol/core/contracts/interfaces/callback/IGridSwapCallback.sol";
-import "@gridexprotocol/core/contracts/libraries/GridAddress.sol";
-import "@gridexprotocol/core/contracts/libraries/CallbackValidator.sol";
+import "../libraries/GridAddress.sol";
+import "../libraries/CallbackValidator.sol";
 import "../AbstractPayments.sol";
 
 contract SwapTest is IGridSwapCallback, AbstractPayments {

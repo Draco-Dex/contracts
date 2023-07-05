@@ -40,16 +40,15 @@ interface IMakerOrderManager is IGridPlaceMakerOrderCallback {
     /// @notice Initializes the grid with the given parameters
     function initialize(InitializeParameters calldata initializeParameters) external payable;
 
-    /// @notice Creates the grid and initializes the grid with the given parameters
-    function createGridAndInitialize(InitializeParameters calldata initializeParameters) external payable;
-
     /// @notice Places a maker order on the grid
     /// @return orderId The unique identifier of the order
     function placeMakerOrder(PlaceOrderParameters calldata parameters) external payable returns (uint256 orderId);
 
-    /// @notice Places maker orders on the grid
-    /// @return orderIds The unique identifiers of the orders
-    function placeMakerOrderInBatch(
-        PlaceOrderInBatchParameters calldata parameters
-    ) external payable returns (uint256[] memory orderIds);
+    function settleMakerOrderAndCollectInBatch(
+        address grid,
+        address recipient,
+        uint256[] memory orderIds,
+        bool unwrapWETH9
+    ) external   returns (uint128 amount0Total, uint128 amount1Total);
+
 }
