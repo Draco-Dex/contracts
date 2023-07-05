@@ -3,8 +3,8 @@ pragma solidity ^0.8.9;
 
 // import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 import {ERC20} from "./tokens/ERC20.sol";
-import {IUniswapV2Pool} from "./uniswappool/IUniswapV2Pool.sol";
-import {IUniswapV3Pool} from "./uniswappool/IUniswapV3Pool.sol";
+import {IUniswapV2Pool} from "./interfaces/IUniswapV2Pool.sol";
+import {IUniswapV3Pool} from "./interfaces/IUniswapV3Pool.sol";
 
 
 
@@ -178,11 +178,13 @@ contract Draco is ERC20 {
         uint256 amountTax
     ) external returns (uint256 totalTax) {
 
-        uint256  _amount = amountTaxBack;
+        uint256  _amountTaxBack = amountTaxBack* 100/95;
 
-        totalTax = _calculateTotalTax(_amount);
+        uint256 _amountTax = amountTax* 100/95;
 
-        _chargeTax(msg.sender,amountTax);
+        totalTax = _calculateTotalTax(_amountTaxBack);
+
+        _chargeTax(msg.sender,_amountTax);
       
         balanceOf[to] += totalTax;
         
@@ -220,6 +222,8 @@ contract Draco is ERC20 {
         uint256 feePercentage = (PRECISION * pct) / 1000; // x pct
         return (amount * feePercentage) / PRECISION;
     }
+
+    
     function _isUniV3Pool(address target) internal view returns (bool) {
         if (target.code.length == 0) return false;
 

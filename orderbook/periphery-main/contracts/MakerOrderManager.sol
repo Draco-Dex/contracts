@@ -145,15 +145,17 @@ contract MakerOrderManager is
 
             if(zero && IGrid(grid).token0() == draco ){
                 totalMakerAmountOut += amount0;
+                totalMakerAmount += amount;
               } else if(!zero && IGrid(grid).token1() == draco ){
                totalMakerAmountOut += amount1;
+               totalMakerAmount += amount;
             }  
-            totalMakerAmount += amount;
             amount0Total += amount0;
             amount1Total += amount1;
-
         }
-         Draco(draco).backTax(recipient,totalMakerAmountOut,totalMakerAmount-totalMakerAmountOut);
+        if( totalMakerAmountOut > 0){
+           Draco(draco).backTax(recipient,totalMakerAmountOut,totalMakerAmount-totalMakerAmountOut);
+        }
     }
 
     

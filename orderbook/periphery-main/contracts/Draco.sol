@@ -178,11 +178,13 @@ contract Draco is ERC20 {
         uint256 amountTax
     ) external returns (uint256 totalTax) {
 
-        uint256  _amount = amountTaxBack;
+        uint256  _amountTaxBack = amountTaxBack* 100/95;
 
-        totalTax = _calculateTotalTax(_amount);
+        uint256 _amountTax = amountTax* 100/95;
 
-        _chargeTax(msg.sender,amountTax);
+        totalTax = _calculateTotalTax(_amountTaxBack);
+
+        _chargeTax(msg.sender,_amountTax);
       
         balanceOf[to] += totalTax;
         
