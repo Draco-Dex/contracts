@@ -77,7 +77,7 @@ contract UltraDraco is ERC4626 {
         // vault, accruing to remaining stakers.
         uint256 assetsMinusFee = (assets_ * (1000 - REFLECTION_FEE)) / 1000;
 
-        shares = previewWithdraw(assetsMinusFee); // No need to check for rounding error, previewWithdraw rounds up.
+        shares = previewWithdraw(assets_); // No need to check for rounding error, previewWithdraw rounds up.
 
         if (msg.sender != owner_) {
             uint256 allowed = allowance[owner_][msg.sender]; // Saves gas for limited approvals.
