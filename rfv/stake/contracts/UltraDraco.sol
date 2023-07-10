@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.9;
 
 import {ERC4626} from "./tokens/ERC4626.sol";
 import {ERC20} from "./tokens/ERC20.sol";
@@ -21,14 +21,23 @@ contract UltraDraco is ERC4626 {
 
     address public controller;
 
+    mapping(address => bool) public idoList;
+    
     /// @notice Reflection fee applied on withdraws which accrues to
     /// remaining stakers.
-    uint256 public constant REFLECTION_FEE = 5; // 0.5%
+    uint256 public constant REFLECTION_FEE = 10; // 1%
+    
 
     constructor(
         address asset_
     ) ERC4626(ERC20(asset_), "ULTRA DRACO", "uDRACO") {
         controller = msg.sender;
+    }
+      modifier onlyController() {
+        if (msg.sender != controller ){
+            revert OnlyTransfersWithController();
+        }
+        _;
     }
 
     /// @notice Locking all transfers not involving controller.
@@ -36,8 +45,12 @@ contract UltraDraco is ERC4626 {
         address recipient_,
         uint256 amount_
     ) public override returns (bool) {
-        if (msg.sender != controller && recipient_ != controller)
-            revert OnlyTransfersWithController();
+        if (msg.sender != controller && recipient_ != controller
+            && !idoList[msg.sender] && !idoList[recipient_] 
+         ){
+              revert OnlyTransfersWithController();
+        }
+            
         return super.transfer(recipient_, amount_);
     }
 
@@ -47,8 +60,11 @@ contract UltraDraco is ERC4626 {
         address recipient_,
         uint256 amount_
     ) public override returns (bool) {
-        if (sender_ != controller && recipient_ != controller)
-            revert OnlyTransfersWithController();
+        if (sender_ != controller && recipient_ != controller
+            && !idoList[msg.sender] && !idoList[recipient_] 
+         ){
+          revert OnlyTransfersWithController();
+        }
         return super.transferFrom(sender_, recipient_, amount_);
     }
 
@@ -104,5 +120,31 @@ contract UltraDraco is ERC4626 {
 
     function totalAssets() public view override returns (uint256) {
         return asset.balanceOf(address(this));
+    }
+
+    /**
+     * @notice Add to idoList
+     */
+    function addIdoList(address[] calldata toAddAddresses) 
+    external onlyController
+    {
+        for (uint i = 0; i < toAddAddresses.length; i++) {
+            idoList[toAddAddresses[i]] = true;
+        }
+    }
+
+    /**
+     * @notice Remove from idoList
+     */
+    function removeFromWhitelist(address[] calldata toRemoveAddresses)
+    external onlyController
+    {
+        for (uint i = 0; i < toRemoveAddresses.length; i++) {
+            delete idoList[toRemoveAddresses[i]];
+        }
+    }
+
+    function isOnWhitelist(address user) public view returns(bool) {
+        return idoList[user];
     }
 }
